@@ -16,23 +16,82 @@ class Crypto extends Component {
 
     componentDidMount() {
         this.getCryptoData();
+        this.timerID = setInterval(() => this.getCryptoData(), 5000);
+    }
+
+    componentWillUnmount () {
+        clearInterval(this.timerID);
     }
 
     getCryptoData = () => {
        
-       axios.get('https://blockchain.info/pl/ticker', {mode: 'cors'}
-       )
+       axios.get('https://blockchain.info/ticker', {mode: 'cors'})
             
             .then(res => {
-                console.log(res);
+                const tickers = res.data;
+
+                this.setState((state) => {
+                    let newCryptoList = [];
+
+                    for (const [ticker, cryptoRate] of Object.entries (tickers)) {
+                        
+                        let lastCryptoObj = state.cryptoList.find((cryptoObj) => {
+                            return(cryptoObj.currency === ticker);
+                        })
+                        
+                        // console.log(lastCryptoObj);
+
+                        let newCryptoObj = {
+                            currency: ticker,
+                            symbol: cryptoRate.symbol,
+                            buy: cryptoRate.buy, 
+                            sell: cryptoRate.sell,
+                            lastRate: cryptoRate.last,                      
+                        }
+
+                        if (lastCryptoObj !== undefined) {
+                            if (newCryptoObj.lastRate > lastCryptoObj.lastRate) {
+                                newCryptoObj.cssClass = 'green';
+                                newCryptoObj.htmlArray = String.fromCharCode(8593);
+                            } else if (newCryptoObj.lastRate < lastCryptoObj.lastRate) {
+                                        newCryptoObj.cssClass = 'red';
+                                        newCryptoObj.htmlArray = String.fromCharCode(8595);
+                            } else {
+                                newCryptoObj.cssClass = 'blue';
+                                newCryptoObj.htmlArray = String.fromCharCode(8596);
+                            }
+                            
+
+                        } else {
+                            newCryptoObj.cssClass = 'blue';
+                            newCryptoObj.htmlArray = String.fromCharCode(8596);
+                        }
+                        
+                        newCryptoList.push(newCryptoObj);
+                    }
+
+                    return({
+                        cryptoList: newCryptoList
+                    })
+                });
+                
+                
+                console.log(res.data);
             });
 
+    }
+
+    
+    filterCryptoList = () => {
+        
+        console.log(this_inputFilter.value);
     }
 
     render() {
         return(
             <div className='Crypto'>
-                <CryptoList />                
+                <input ref={element => this_inputFilter = element} onChange = {this.filterCryptoList} type="text" placeholder="Filter"/>
+                <CryptoList cryptoList={this.state.cryptoList} />                
             </div>
         )
     }
