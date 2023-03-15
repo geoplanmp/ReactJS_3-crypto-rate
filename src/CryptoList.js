@@ -17,7 +17,7 @@ function CryptoList(props) {
         );
     })
 
-    console.log(cryptoList);
+    // console.log(cryptoList);
 
     return(
         
